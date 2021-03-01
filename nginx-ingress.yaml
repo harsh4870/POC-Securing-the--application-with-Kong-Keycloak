@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+    configuration.konghq.com: https-only
+    cert-manager.io/cluster-issuer: nginx-prod
+    kong.ingress.kubernetes.io/proxy-read-timeout: "1800"
+    kong.ingress.kubernetes.io/proxy-send-timeout: "1800"
+    kong.ingress.kubernetes.io/rewrite-target: /
+    kong.ingress.kubernetes.io/proxy-body-size: "50m"
+  name: nginx-basic-ingress
+spec:
+  rules:
+  - host: nginx.mockharsh.tk
+    http:
+      paths:
+      - backend:
+          serviceName: nginx-service
+          servicePort: 8080
+  tls:
+  - hosts:
+    - nginx.mockharsh.tk
+    secretName: nginx-prod
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: nginx-prod
+spec:
+  acme:
+    email: harsh.manvar@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: nginx-prod
+    solvers:
+    - http01:
+        ingress:
+          class: kong
+      selector: {}
